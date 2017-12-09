@@ -11,14 +11,15 @@ public class ShootingGunController : MonoBehaviour
     public ParticleSystem flareParticle;
     public LineRenderer gunFlare;
     public Transform gunEnd;
-    //---------------------------------
     public Transform cameraTransform;
     public Reticle reticle;
     public Transform gunContainer;
+    public ShootingGalleryController shootingGalleryController;
+    public VREyeRaycaster eyeRaycaster;
+
     public float damping = 0.5f;
     public float dampingCoef = -20f;
     public float gunContainerSmooth = 10f;
-    //---------------------------------
     public float defaultLineLength = 70f;
     public float gunFlareVisibleSeconds = 0.07f;
     private void OnEnable()
@@ -33,14 +34,24 @@ public class ShootingGunController : MonoBehaviour
 
     private void HandleDown()
     {
-        StartCoroutine(Fire());
+        if (shootingGalleryController.IsPlaying == false)
+            return;
+        //-------------------------------
+        ShootingTarget shootingTarget = eyeRaycaster.CurrentInteractible ? eyeRaycaster.CurrentInteractible.GetComponent<ShootingTarget>() : null;
+        Transform target = shootingTarget ? shootingTarget.transform : null;
+        StartCoroutine(Fire(target));
+        //-------------------------------
     }
 
-    private IEnumerator Fire()
+    private IEnumerator Fire(Transform target)
     {
         audioSource.Play();
         float lineLength = defaultLineLength;
-        //TODO 判斷有無射到東西
+        //判斷有無射到東西
+        //-------------------------------
+        if (target)
+            lineLength = Vector3.Distance(gunEnd.position, target.position);
+        //-------------------------------
         flareParticle.Play();
         gunFlare.enabled = true;
         yield return StartCoroutine(MoveLineRenderer(lineLength));
